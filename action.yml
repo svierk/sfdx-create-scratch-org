@@ -1,0 +1,149 @@
+name: SFDX Create Scratch Org
+description: Composite action for creating a Salesforce scratch org.
+
+branding:
+  icon: cloud-lightning
+  color: blue
+
+inputs:
+  alias:
+    description: Alias for the scratch org.
+    required: false
+  set-default:
+    description: Set the scratch org as your default org.
+    required: false
+  definition-file:
+    description: >
+      Path to a scratch org definition file.
+      The scratch org definition file is a blueprint for the scratch org. 
+      It mimics the shape of an org that you use in the development life cycle, such as acceptance testing, packaging, or production. 
+      See <https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs_def_file.htm> for all the option you can specify in the definition file.
+    required: false
+  target-dev-hub:
+    description: >
+      Username or alias of the Dev Hub org.
+      Overrides the value of the target-dev-hub configuration variable, if set.
+    required: true
+  edition:
+    description: >
+      Salesforce edition of the scratch org. Overrides the value of the "edition" option in the definition file, if set.
+      The editions that begin with "partner-" are available only if the Dev Hub org is a Partner Business Org.
+      Permissible values are: developer, enterprise, group, professional, partner-developer, partner-enterprise, partner-group, partner-professional
+    required: false
+  duration-days:
+    description: Number of days before the org expires. (1-30)
+    required: false
+  wait:
+    description: >
+      Number of minutes to wait for the scratch org to be ready.
+      If the command continues to run after the wait period, the CLI returns control of the terminal to you and displays the job ID. 
+      To resume the scratch org creation, run the org resume scratch command and pass it the job ID.
+    required: false
+  api-version:
+    description: Override the api version used for api requests made by this command.
+    required: false
+  client-id:
+    description: Consumer key of the Dev Hub connected app.
+    required: false
+  username:
+    description: >
+      Username of the scratch org admin user. Overrides the value of the "username" option in the definition file, if set.
+      The username must be unique within the entire scratch org and sandbox universe. You must add your own logic to ensure uniqueness.
+      Omit this flag to have Salesforce generate a unique username for your org.
+    required: false
+  description:
+    description: >
+      Description of the scratch org in the Dev Hub. 
+      Overrides the value of the "description" option in the definition file, if set.
+    required: false
+  name:
+    description: >
+      Name of the org, such as "Acme Company". 
+      Overrides the value of the "orgName" option in the definition file, if set.
+    required: false
+  release:
+    description: >
+      Release of the scratch org as compared to the Dev Hub release.
+      By default, scratch orgs are on the same release as the Dev Hub. 
+      During Salesforce release transition periods, you can override this default behavior and opt in or out of the new release.
+    required: false
+  admin-email:
+    description: >
+      Email address that will be applied to the org's admin user. 
+      Overrides the value of the "adminEmail" option in the definition file, if set.
+    required: false
+  source-org:
+    description: >
+      15-character ID of the org whose shape the new scratch org will be based on. 
+      Overrides the value of the "sourceOrg" option in the definition file, if set.
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Create Scratch Org
+      shell: bash
+      run: |
+        args=()
+
+        if [[ -n "${{ inputs.alias }}" ]]; then
+          args+=(--alias "${{ inputs.alias }}")
+        fi
+
+        if [[ "${{ inputs.set-default }}" == "true" ]]; then
+          args+=(--set-default)
+        fi
+
+        if [[ -n "${{ inputs.definition-file }}" ]]; then
+          args+=(--definition-file "${{ inputs.definition-file }}")
+        fi
+
+        if [[ -n "${{ inputs.target-dev-hub }}" ]]; then
+          args+=(--target-dev-hub "${{ inputs.target-dev-hub }}")
+        fi
+
+        if [[ -n "${{ inputs.edition }}" ]]; then
+          args+=(--edition "${{ inputs.edition }}")
+        fi
+
+        if [[ -n "${{ inputs.duration-days }}" ]]; then
+          args+=(--duration-days "${{ inputs.duration-days }}")
+        fi
+
+        if [[ -n "${{ inputs.wait }}" ]]; then
+          args+=(--wait "${{ inputs.wait }}")
+        fi
+
+        if [[ -n "${{ inputs.api-version }}" ]]; then
+          args+=(--api-version "${{ inputs.api-version }}")
+        fi
+
+        if [[ -n "${{ inputs.client-id }}" ]]; then
+          args+=(--client-id "${{ inputs.client-id }}")
+        fi
+
+        if [[ -n "${{ inputs.username }}" ]]; then
+          args+=(--username "${{ inputs.username }}")
+        fi
+
+        if [[ -n "${{ inputs.description }}" ]]; then
+          args+=(--description "${{ inputs.description }}")
+        fi
+
+        if [[ -n "${{ inputs.name }}" ]]; then
+          args+=(--name "${{ inputs.name }}")
+        fi
+
+        if [[ -n "${{ inputs.release }}" ]]; then
+          args+=(--release "${{ inputs.release }}")
+        fi
+
+        if [[ -n "${{ inputs.admin-email }}" ]]; then
+          args+=(--admin-email "${{ inputs.admin-email }}")
+        fi
+
+        if [[ -n "${{ inputs.source-org }}" ]]; then
+          args+=(--source-org "${{ inputs.source-org }}")
+        fi
+
+        sf org create scratch "${args[@]}"
