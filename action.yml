@@ -15,8 +15,8 @@ inputs:
   definition-file:
     description: >
       Path to a scratch org definition file.
-      The scratch org definition file is a blueprint for the scratch org. 
-      It mimics the shape of an org that you use in the development life cycle, such as acceptance testing, packaging, or production. 
+      The scratch org definition file is a blueprint for the scratch org.
+      It mimics the shape of an org that you use in the development life cycle, such as acceptance testing, packaging, or production.
       See <https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs_def_file.htm> for all the option you can specify in the definition file.
     required: false
   target-dev-hub:
@@ -36,7 +36,7 @@ inputs:
   wait:
     description: >
       Number of minutes to wait for the scratch org to be ready.
-      If the command continues to run after the wait period, the CLI returns control of the terminal to you and displays the job ID. 
+      If the command continues to run after the wait period, the CLI returns control of the terminal to you and displays the job ID.
       To resume the scratch org creation, run the org resume scratch command and pass it the job ID.
     required: false
   api-version:
@@ -53,97 +53,130 @@ inputs:
     required: false
   description:
     description: >
-      Description of the scratch org in the Dev Hub. 
+      Description of the scratch org in the Dev Hub.
       Overrides the value of the "description" option in the definition file, if set.
     required: false
   name:
     description: >
-      Name of the org, such as "Acme Company". 
+      Name of the org, such as "Acme Company".
       Overrides the value of the "orgName" option in the definition file, if set.
     required: false
   release:
     description: >
       Release of the scratch org as compared to the Dev Hub release.
-      By default, scratch orgs are on the same release as the Dev Hub. 
+      By default, scratch orgs are on the same release as the Dev Hub.
       During Salesforce release transition periods, you can override this default behavior and opt in or out of the new release.
     required: false
   admin-email:
     description: >
-      Email address that will be applied to the org's admin user. 
+      Email address that will be applied to the org's admin user.
       Overrides the value of the "adminEmail" option in the definition file, if set.
     required: false
   source-org:
     description: >
-      15-character ID of the org whose shape the new scratch org will be based on. 
+      15-character ID of the org whose shape the new scratch org will be based on.
       Overrides the value of the "sourceOrg" option in the definition file, if set.
     required: false
+
+outputs:
+  username:
+    description: Username of the created scratch org.
+    value: ${{ steps.create.outputs.username }}
+  org-id:
+    description: ID of the created scratch org.
+    value: ${{ steps.create.outputs.org-id }}
 
 runs:
   using: composite
   steps:
     - name: Create Scratch Org
+      id: create
       shell: bash
+      env:
+        ALIAS: ${{ inputs.alias }}
+        SET_DEFAULT: ${{ inputs.set-default }}
+        DEFINITION_FILE: ${{ inputs.definition-file }}
+        TARGET_DEV_HUB: ${{ inputs.target-dev-hub }}
+        EDITION: ${{ inputs.edition }}
+        DURATION_DAYS: ${{ inputs.duration-days }}
+        WAIT: ${{ inputs.wait }}
+        API_VERSION: ${{ inputs.api-version }}
+        CLIENT_ID: ${{ inputs.client-id }}
+        USERNAME: ${{ inputs.username }}
+        DESCRIPTION: ${{ inputs.description }}
+        NAME: ${{ inputs.name }}
+        RELEASE: ${{ inputs.release }}
+        ADMIN_EMAIL: ${{ inputs.admin-email }}
+        SOURCE_ORG: ${{ inputs.source-org }}
       run: |
+        set -euo pipefail
+
         args=()
 
-        if [[ -n "${{ inputs.alias }}" ]]; then
-          args+=(--alias "${{ inputs.alias }}")
+        if [[ -n "$ALIAS" ]]; then
+          args+=(--alias "$ALIAS")
         fi
 
-        if [[ "${{ inputs.set-default }}" == "true" ]]; then
+        if [[ "$SET_DEFAULT" == "true" ]]; then
           args+=(--set-default)
         fi
 
-        if [[ -n "${{ inputs.definition-file }}" ]]; then
-          args+=(--definition-file "${{ inputs.definition-file }}")
+        if [[ -n "$DEFINITION_FILE" ]]; then
+          args+=(--definition-file "$DEFINITION_FILE")
         fi
 
-        if [[ -n "${{ inputs.target-dev-hub }}" ]]; then
-          args+=(--target-dev-hub "${{ inputs.target-dev-hub }}")
+        if [[ -n "$TARGET_DEV_HUB" ]]; then
+          args+=(--target-dev-hub "$TARGET_DEV_HUB")
         fi
 
-        if [[ -n "${{ inputs.edition }}" ]]; then
-          args+=(--edition "${{ inputs.edition }}")
+        if [[ -n "$EDITION" ]]; then
+          args+=(--edition "$EDITION")
         fi
 
-        if [[ -n "${{ inputs.duration-days }}" ]]; then
-          args+=(--duration-days "${{ inputs.duration-days }}")
+        if [[ -n "$DURATION_DAYS" ]]; then
+          args+=(--duration-days "$DURATION_DAYS")
         fi
 
-        if [[ -n "${{ inputs.wait }}" ]]; then
-          args+=(--wait "${{ inputs.wait }}")
+        if [[ -n "$WAIT" ]]; then
+          args+=(--wait "$WAIT")
         fi
 
-        if [[ -n "${{ inputs.api-version }}" ]]; then
-          args+=(--api-version "${{ inputs.api-version }}")
+        if [[ -n "$API_VERSION" ]]; then
+          args+=(--api-version "$API_VERSION")
         fi
 
-        if [[ -n "${{ inputs.client-id }}" ]]; then
-          args+=(--client-id "${{ inputs.client-id }}")
+        if [[ -n "$CLIENT_ID" ]]; then
+          args+=(--client-id "$CLIENT_ID")
         fi
 
-        if [[ -n "${{ inputs.username }}" ]]; then
-          args+=(--username "${{ inputs.username }}")
+        if [[ -n "$USERNAME" ]]; then
+          args+=(--username "$USERNAME")
         fi
 
-        if [[ -n "${{ inputs.description }}" ]]; then
-          args+=(--description "${{ inputs.description }}")
+        if [[ -n "$DESCRIPTION" ]]; then
+          args+=(--description "$DESCRIPTION")
         fi
 
-        if [[ -n "${{ inputs.name }}" ]]; then
-          args+=(--name "${{ inputs.name }}")
+        if [[ -n "$NAME" ]]; then
+          args+=(--name "$NAME")
         fi
 
-        if [[ -n "${{ inputs.release }}" ]]; then
-          args+=(--release "${{ inputs.release }}")
+        if [[ -n "$RELEASE" ]]; then
+          args+=(--release "$RELEASE")
         fi
 
-        if [[ -n "${{ inputs.admin-email }}" ]]; then
-          args+=(--admin-email "${{ inputs.admin-email }}")
+        if [[ -n "$ADMIN_EMAIL" ]]; then
+          args+=(--admin-email "$ADMIN_EMAIL")
         fi
 
-        if [[ -n "${{ inputs.source-org }}" ]]; then
-          args+=(--source-org "${{ inputs.source-org }}")
+        if [[ -n "$SOURCE_ORG" ]]; then
+          args+=(--source-org "$SOURCE_ORG")
         fi
 
-        sf org create scratch "${args[@]}"
+        result=$(sf org create scratch --json "${args[@]}")
+        echo "$result" | jq '.'
+
+        {
+          echo "username=$(echo "$result" | jq -r '.result.username')"
+          echo "org-id=$(echo "$result" | jq -r '.result.orgId')"
+        } >> "$GITHUB_OUTPUT"

@@ -71,6 +71,52 @@ The following actions were also used in the example workflow above:
 
 Of course, the create scratch org action can be used flexibly and the respective approach can vary.
 
+## Inputs
+
+| Name              | Required | Default | Description                                                                                   |
+| ----------------- | -------- | ------- | --------------------------------------------------------------------------------------------- |
+| `target-dev-hub`  | yes      |         | Username or alias of the Dev Hub org.                                                          |
+| `alias`           | no       |         | Alias for the scratch org.                                                                     |
+| `set-default`     | no       |         | Set the scratch org as your default org.                                                       |
+| `definition-file` | no       |         | Path to a scratch org definition file (blueprint for the scratch org).                         |
+| `edition`         | no       |         | Salesforce edition, e.g. `developer`, `enterprise`. Overrides the definition file.             |
+| `duration-days`   | no       |         | Number of days before the org expires (1–30).                                                  |
+| `wait`            | no       |         | Number of minutes to wait for the scratch org to be ready.                                     |
+| `api-version`     | no       |         | Override the api version used for api requests.                                                |
+| `client-id`       | no       |         | Consumer key of the Dev Hub connected app.                                                     |
+| `username`        | no       |         | Username of the scratch org admin user. Omit to auto-generate a unique username.               |
+| `description`     | no       |         | Description of the scratch org in the Dev Hub.                                                 |
+| `name`            | no       |         | Name of the org, e.g. `Acme Company`.                                                          |
+| `release`         | no       |         | Release of the scratch org relative to the Dev Hub release.                                    |
+| `admin-email`     | no       |         | Email address applied to the org's admin user.                                                |
+| `source-org`      | no       |         | 15-character ID of the org whose shape the new scratch org is based on.                        |
+
+## Outputs
+
+The action exposes the details of the newly created scratch org so that follow-up steps (deploy, test, delete) can target it without guessing the generated username:
+
+| Name       | Description                          |
+| ---------- | ------------------------------------ |
+| `username` | Username of the created scratch org. |
+| `org-id`   | ID of the created scratch org.       |
+
+```yaml
+- name: Create Scratch Org
+  id: scratch
+  uses: svierk/sfdx-create-scratch-org@main
+  with:
+    target-dev-hub: devhub
+    definition-file: config/project-scratch-def.json
+    duration-days: 1
+
+- name: Deploy Metadata
+  run: sf project deploy start --target-org ${{ steps.scratch.outputs.username }}
+
+- name: Delete Scratch Org
+  if: always()
+  run: sf org delete scratch --target-org ${{ steps.scratch.outputs.username }} --no-prompt
+```
+
 ## References
 
 The scratch org creation option supported by this GitHub composite action can be found in the Salesforce CLI Command Reference here: 
