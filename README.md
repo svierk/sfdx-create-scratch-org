@@ -90,6 +90,7 @@ Of course, the create scratch org action can be used flexibly and the respective
 | `release`         | no       |         | Release of the scratch org relative to the Dev Hub release.                                    |
 | `admin-email`     | no       |         | Email address applied to the org's admin user.                                                |
 | `source-org`      | no       |         | 15-character ID of the org whose shape the new scratch org is based on.                        |
+| `step-summary`    | no       | `true`  | Write a result section to the GitHub Actions [job summary](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary). Set to `false` to avoid collisions with a custom workflow summary. |
 
 ## Outputs
 

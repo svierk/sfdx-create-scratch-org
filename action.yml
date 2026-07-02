@@ -77,6 +77,10 @@ inputs:
       15-character ID of the org whose shape the new scratch org will be based on.
       Overrides the value of the "sourceOrg" option in the definition file, if set.
     required: false
+  step-summary:
+    description: Write a result section to the GitHub Actions job summary. Set to false to avoid collisions with a custom workflow summary.
+    required: false
+    default: 'true'
 
 outputs:
   username:
@@ -108,6 +112,7 @@ runs:
         RELEASE: ${{ inputs.release }}
         ADMIN_EMAIL: ${{ inputs.admin-email }}
         SOURCE_ORG: ${{ inputs.source-org }}
+        STEP_SUMMARY: ${{ inputs.step-summary }}
       run: |
         set -euo pipefail
 
@@ -176,7 +181,23 @@ runs:
         result=$(sf org create scratch --json "${args[@]}")
         echo "$result" | jq '.'
 
+        username=$(echo "$result" | jq -r '.result.username')
+        org_id=$(echo "$result" | jq -r '.result.orgId')
+
         {
-          echo "username=$(echo "$result" | jq -r '.result.username')"
-          echo "org-id=$(echo "$result" | jq -r '.result.orgId')"
+          echo "username=$username"
+          echo "org-id=$org_id"
         } >> "$GITHUB_OUTPUT"
+
+        echo "✅ Successfully created scratch org: $username"
+
+        if [[ "$STEP_SUMMARY" == "true" ]]; then
+          {
+            echo ""
+            echo "### 🌩️ Scratch org created"
+            echo ""
+            echo "- **Username:** \`$username\`"
+            echo "- **Org ID:** \`$org_id\`"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
