@@ -90,16 +90,18 @@ Of course, the create scratch org action can be used flexibly and the respective
 | `release`         | no       |         | Release of the scratch org relative to the Dev Hub release.                                    |
 | `admin-email`     | no       |         | Email address applied to the org's admin user.                                                |
 | `source-org`      | no       |         | 15-character ID of the org whose shape the new scratch org is based on.                        |
+| `generate-password` | no     | `false` | Generate a password for the scratch org admin user and expose it in clear text via the log, job summary, and `password` output. Anyone with access to the workflow run can read it. |
 | `step-summary`    | no       | `true`  | Write a result section to the GitHub Actions [job summary](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary). Set to `false` to avoid collisions with a custom workflow summary. |
 
 ## Outputs
 
 The action exposes the details of the newly created scratch org so that follow-up steps (deploy, test, delete) can target it without guessing the generated username:
 
-| Name       | Description                          |
-| ---------- | ------------------------------------ |
-| `username` | Username of the created scratch org. |
-| `org-id`   | ID of the created scratch org.       |
+| Name       | Description                                                              |
+| ---------- | ------------------------------------------------------------------------ |
+| `username` | Username of the created scratch org.                                     |
+| `org-id`   | ID of the created scratch org.                                           |
+| `password` | Password of the scratch org admin user. Only set when `generate-password` is `true`. |
 
 ```yaml
 - name: Create Scratch Org

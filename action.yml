@@ -77,6 +77,13 @@ inputs:
       15-character ID of the org whose shape the new scratch org will be based on.
       Overrides the value of the "sourceOrg" option in the definition file, if set.
     required: false
+  generate-password:
+    description: >
+      Generate a password for the scratch org admin user after the org is created.
+      The password is exposed in clear text via the job log, the job summary, and the "password" output.
+      Scratch orgs are ephemeral, but be aware that anyone with access to the workflow run can read the password.
+    required: false
+    default: 'false'
   step-summary:
     description: Write a result section to the GitHub Actions job summary. Set to false to avoid collisions with a custom workflow summary.
     required: false
@@ -89,6 +96,9 @@ outputs:
   org-id:
     description: ID of the created scratch org.
     value: ${{ steps.create.outputs.org-id }}
+  password:
+    description: Password of the scratch org admin user. Only set when generate-password is true.
+    value: ${{ steps.password.outputs.password }}
 
 runs:
   using: composite
@@ -198,6 +208,34 @@ runs:
             echo ""
             echo "- **Username:** \`$username\`"
             echo "- **Org ID:** \`$org_id\`"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+    - name: Generate Password
+      id: password
+      if: ${{ inputs.generate-password == 'true' }}
+      shell: bash
+      env:
+        USERNAME: ${{ steps.create.outputs.username }}
+        STEP_SUMMARY: ${{ inputs.step-summary }}
+      run: |
+        set -euo pipefail
+
+        result=$(sf org generate password --target-org "$USERNAME" --json)
+        echo "$result" | jq '.'
+
+        password=$(echo "$result" | jq -r '.result.password')
+
+        echo "password=$password" >> "$GITHUB_OUTPUT"
+
+        echo "🔑 Generated password for $USERNAME: $password"
+
+        if [[ "$STEP_SUMMARY" == "true" ]]; then
+          {
+            echo "### 🔑 Scratch org password"
+            echo ""
+            echo "- **Password:** \`$password\`"
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
         fi
