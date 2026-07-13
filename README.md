@@ -6,7 +6,7 @@ This repository implements a simple GitHub composite action for creating Salesfo
 
 In a GitHub workflow, the use of the action after installing the SF CLI and authorizing the respective DevHub Org could look like this:
 
-```
+```yaml
 jobs:
   create-scratch-org:
     name: Create Scratch Org
