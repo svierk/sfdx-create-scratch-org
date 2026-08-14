@@ -80,8 +80,8 @@ inputs:
   generate-password:
     description: >
       Generate a password for the scratch org admin user after the org is created.
-      The password is exposed in clear text via the job log, the job summary, and the "password" output.
-      Scratch orgs are ephemeral, but be aware that anyone with access to the workflow run can read the password.
+      The password is masked in the job log, but exposed in clear text via the job summary and the "password" output.
+      Scratch orgs are ephemeral, but be aware that anyone with access to the workflow run can read the job summary.
     required: false
     default: 'false'
   step-summary:
@@ -189,6 +189,14 @@ runs:
         fi
 
         result=$(sf org create scratch --json "${args[@]}")
+
+        # The --json payload carries live credentials of the new org (access token,
+        # refresh token, client secret). Register them as secrets before anything is
+        # written to the log, so neither the dump below nor a later step can leak them.
+        while IFS= read -r secret; do
+          echo "::add-mask::$secret"
+        done < <(echo "$result" | jq -r '(.result.authFields // {}) | (.accessToken // empty), (.refreshToken // empty), (.clientSecret // empty)')
+
         echo "$result" | jq '.'
 
         username=$(echo "$result" | jq -r '.result.username')
@@ -223,13 +231,18 @@ runs:
         set -euo pipefail
 
         result=$(sf org generate password --target-org "$USERNAME" --json)
-        echo "$result" | jq '.'
-
         password=$(echo "$result" | jq -r '.result.password')
+
+        # Keep the password out of the plain build log: mask it before the raw
+        # command output is dumped. The job summary below is not masked - that is
+        # the deliberate hand-over channel, see the input description.
+        echo "::add-mask::$password"
+
+        echo "$result" | jq '.'
 
         echo "password=$password" >> "$GITHUB_OUTPUT"
 
-        echo "🔑 Generated password for $USERNAME: $password"
+        echo "🔑 Generated password for $USERNAME"
 
         if [[ "$STEP_SUMMARY" == "true" ]]; then
           {
