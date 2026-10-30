@@ -188,7 +188,24 @@ runs:
           args+=(--source-org "$SOURCE_ORG")
         fi
 
-        result=$(sf org create scratch --json "${args[@]}")
+        # Capture the exit code instead of letting errexit end the step here: the
+        # CLI explains why the org could not be created (e.g. the Dev Hub's limit
+        # of active scratch orgs) only in the --json payload. An error payload
+        # carries no credentials, so it is safe to print.
+        result=$(sf org create scratch --json "${args[@]}") && exit_code=0 || exit_code=$?
+
+        if [[ "$exit_code" -ne 0 ]]; then
+          name=$(echo "$result" | jq -r '.name // empty' 2>/dev/null || true)
+          message=$(echo "$result" | jq -r '.message // empty' 2>/dev/null || true)
+          if [[ -n "$message" ]]; then
+            echo "::error::Failed to create the scratch org${name:+ ($name)}: $message"
+            echo "$result" | jq -r '.actions[]? | "  - \(.)"' 2>/dev/null || true
+          else
+            echo "$result"
+            echo "::error::Failed to create the scratch org (exit code $exit_code)."
+          fi
+          exit "$exit_code"
+        fi
 
         # The --json payload carries live credentials of the new org (access token,
         # refresh token, client secret). Register them as secrets before anything is
