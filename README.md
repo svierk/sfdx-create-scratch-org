@@ -41,7 +41,7 @@ jobs:
 
       - name: Create Scratch Org
         id: scratch
-        uses: svierk/sfdx-create-scratch-org@v1.3.1
+        uses: svierk/sfdx-create-scratch-org@v1.3.4
         with:
           alias: scratch-${{ github.run_id }}
           name: ${{ inputs.name }}
@@ -71,7 +71,7 @@ jobs:
 
 A few conventions the example follows and that are worth keeping in your own workflows:
 
-- **Pin every `uses:` to an exact release tag** (`@v1.3.1`), not to a branch like `@main` and not to a floating major like `@v1`. An update then becomes an explicit, reviewable change - ideally raised automatically by [Dependabot](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/keeping-your-actions-up-to-date-with-dependabot).
+- **Pin every `uses:` to an exact release tag** (`@v1.3.4`), not to a branch like `@main` and not to a floating major like `@v1`. An update then becomes an explicit, reviewable change - ideally raised automatically by [Dependabot](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/keeping-your-actions-up-to-date-with-dependabot).
 - **Declare `permissions:`** at workflow or job level. Creating a scratch org needs nothing but `contents: read`.
 - **Keep secrets in `secrets`/`env`.** Hand them to an action via its inputs, and pass anything dynamic into a `run:` script through `env:` instead of interpolating `${{ ... }}` directly into the shell command.
 
@@ -120,7 +120,7 @@ The action exposes the details of the newly created scratch org so that follow-u
 ```yaml
 - name: Create Scratch Org
   id: scratch
-  uses: svierk/sfdx-create-scratch-org@v1.3.1
+  uses: svierk/sfdx-create-scratch-org@v1.3.4
   with:
     target-dev-hub: devhub
     definition-file: config/project-scratch-def.json
