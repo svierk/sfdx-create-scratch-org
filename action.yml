@@ -238,7 +238,6 @@ runs:
         fi
 
     - name: Generate Password
-      id: password
       if: ${{ inputs.generate-password == 'true' }}
       shell: bash
       env:
@@ -250,14 +249,11 @@ runs:
         result=$(sf org generate password --target-org "$USERNAME" --json)
         password=$(echo "$result" | jq -r '.result.password')
 
-        # Keep the password out of the plain build log: mask it before the raw
-        # command output is dumped. The job summary below is not masked - that is
-        # the deliberate hand-over channel, see the input description.
-        echo "::add-mask::$password"
-
-        echo "$result" | jq '.'
-
-        echo "password=$password" >> "$GITHUB_OUTPUT"
+        # The job summary is the deliberate hand-over channel, see the input
+        # description. The runner scrubs it at the end of the step with every mask
+        # registered up to then, so the password must not be registered as a secret
+        # in this step - the next step does that. Until then, keep it out of the log.
+        echo "$result" | jq 'del(.result.password)'
 
         echo "🔑 Generated password for $USERNAME"
 
@@ -269,3 +265,24 @@ runs:
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
         fi
+
+        # Hand over through a file: the runner prints a step's env block to the log
+        # before the step runs, which would expose the password before it is masked.
+        (umask 077 && printf '%s' "$password" > "$RUNNER_TEMP/scratch-org-password")
+
+    - name: Register Password as Secret
+      id: password
+      if: ${{ inputs.generate-password == 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        password_file="$RUNNER_TEMP/scratch-org-password"
+        password=$(cat "$password_file")
+        rm -f "$password_file"
+
+        # Mask first: the output is echoed to the log when step debugging is on, and
+        # the mask keeps the password hidden in the log of any follow-up step.
+        echo "::add-mask::$password"
+
+        echo "password=$password" >> "$GITHUB_OUTPUT"
